@@ -1,6 +1,4 @@
-
-
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -914,14 +912,14 @@
             updateAvatar(user.photo, user.name);
             authPanel.style.display = 'none';
             authLoggedInPanel.style.display = 'block';
-            authDisplayName.textContentcurrent = user.name || '使用者';
+            authDisplayName.textContent = user.name || '使用者';
             authDisplayEmail.textContent = user.email || '';
             if (isAdmin(user)) {
                 authAdminBtn.style.display = 'block';
             } else {
                 authAdminBtn.style.display = 'none';
             }
-            localStorage.setItemUser('', JSON.stringify(user));
+            localStorage.setItem('currentUser', JSON.stringify(user));
             hideLoading();
         }
 
