@@ -497,7 +497,7 @@
         .platform-btn-small.douyin { color: #000000; }
         .platform-btn-small.yt { color: #ff0000; }
 
-        /* ===== 加載中彈窗 ===== */
+        /* ===== 加載中彈窗（只畀登入/登出用） ===== */
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
@@ -510,7 +510,7 @@
             animation: fadeIn 0.25s ease;
             min-width: 180px;
         }
-        .loading-spinner {
+        .loading-spinner-full {
             width: 40px; height: 40px; border: 4px solid #e0e0e0;
             border-top: 4px solid #0066cc; border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -566,11 +566,11 @@
             .nav-right { gap: 0.8rem; }
             .nav-links { gap: 1rem; }
             .loading-box { padding: 1.5rem 1.5rem; min-width: 140px; }
-            .loading-spinner { width: 32px; height: 32px; }
+            .loading-spinner-full { width: 32px; height: 32px; }
         }
         @media (max-width: 480px) {
             .loading-box { padding: 1.2rem 1.2rem; min-width: 120px; }
-            .loading-spinner { width: 28px; height: 28px; }
+            .loading-spinner-full { width: 28px; height: 28px; }
             .loading-box p { font-size: 0.85rem; }
         }
     </style>
@@ -740,10 +740,10 @@
         </div>
     </div>
 
-    <!-- ===== 加載中彈窗 ===== -->
+    <!-- ===== 加載中彈窗（只畀登入/登出用） ===== -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-box">
-            <div class="loading-spinner"></div>
+            <div class="loading-spinner-full"></div>
             <p id="loadingText">載入中...</p>
         </div>
     </div>
@@ -771,7 +771,7 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // ===== 加載彈窗控制 =====
+        // ===== 加載彈窗控制（只畀登入/登出用） =====
         let loadingTimer = null;
 
         function showLoading(text) {
@@ -1308,6 +1308,7 @@
             executeFetch();
         };
 
+        // ✅ executeFetch 修正：用 showLoadingSpinner，唔用全屏加載框
         function executeFetch() {
             const url = pendingUrl;
             const mode = pendingMode;
@@ -1318,7 +1319,7 @@
                 return;
             }
 
-            showLoading();
+            showLoadingSpinner();
 
             const fullUrl = proxyUrl + url;
 
@@ -1329,7 +1330,7 @@
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
             xhr.onload = function() {
-                hideLoading();
+                hideLoadingSpinner();
                 if (xhr.status >= 200 && xhr.status < 300) {
                     const text = xhr.responseText;
                     codeDisplay.textContent = text;
