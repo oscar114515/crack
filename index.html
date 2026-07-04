@@ -1151,7 +1151,7 @@
             }
         });
 
-        // ===== 抓取工具原有功能 =====
+        // ===== 抓取工具功能（已修正：唔用 showError() 干擾結果） =====
         const PROXY_LIST = [
             { name: 'CORS Anywhere (需授權)', url: 'https://cors-anywhere.herokuapp.com/' },
             { name: 'CORS Proxy', url: 'https://cors-proxy.htmldriven.com/?url=' },
@@ -1308,18 +1308,25 @@
             executeFetch();
         };
 
-        // ✅ executeFetch 修正：用 showLoadingSpinner，唔用全屏加載框
+        // ✅ 已修正：唔用 showError()，直接用 errorDiv 顯示錯誤
         function executeFetch() {
             const url = pendingUrl;
             const mode = pendingMode;
             const proxyUrl = getCurrentProxyUrl();
 
             if (!url || !proxyUrl) {
-                showError('沒有可用的代理，請稍後再試');
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '沒有可用的代理，請稍後再試';
                 return;
             }
 
-            showLoadingSpinner();
+            // 顯示抓取 loading
+            fetchBtn.disabled = true;
+            loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            codeDisplay.textContent = '⏳ 抓取中...';
+            codeDisplay.className = 'empty-state';
+            statsDisplay.textContent = '抓取中';
 
             const fullUrl = proxyUrl + url;
 
@@ -1330,7 +1337,10 @@
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
             xhr.onload = function() {
-                hideLoadingSpinner();
+                // 隱藏 loading
+                fetchBtn.disabled = false;
+                loadingDiv.style.display = 'none';
+
                 if (xhr.status >= 200 && xhr.status < 300) {
                     const text = xhr.responseText;
                     codeDisplay.textContent = text;
@@ -1338,12 +1348,27 @@
                     urlDisplay.textContent = `(${url})`;
                     statsDisplay.textContent = `${xhr.status} | ${(text.length / 1024).toFixed(2)}KB | ${mode}`;
                     copyBtn.disabled = false;
+                    errorDiv.style.display = 'none';
                 } else {
-                    showError(`錯誤 ${xhr.status} - ${xhr.statusText || '代理可能失效'}`);
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerHTML = `錯誤 ${xhr.status} - ${xhr.statusText || '代理可能失效'}`;
+                    resetDisplay();
                 }
             };
-            xhr.onerror = () => showError('網路錯誤，請檢查連線');
-            xhr.ontimeout = () => showError('連線超時，請稍後再試');
+            xhr.onerror = function() {
+                fetchBtn.disabled = false;
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '網路錯誤，請檢查連線';
+                resetDisplay();
+            };
+            xhr.ontimeout = function() {
+                fetchBtn.disabled = false;
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '連線超時，請稍後再試';
+                resetDisplay();
+            };
             xhr.send();
         }
 
@@ -1362,40 +1387,18 @@
             copyBtn.disabled = true;
         }
 
-        function showError(msg) {
-            errorDiv.style.display = 'block';
-            errorDiv.innerHTML = msg;
-            loadingDiv.style.display = 'none';
-            fetchBtn.disabled = false;
-            resetDisplay();
-        }
-
-        function hideError() { errorDiv.style.display = 'none'; }
-
-        function showLoadingSpinner() {
-            fetchBtn.disabled = true;
-            loadingDiv.style.display = 'block';
-            hideError();
-            codeDisplay.textContent = '⏳ 抓取中...';
-            codeDisplay.className = 'empty-state';
-            statsDisplay.textContent = '抓取中';
-        }
-
-        function hideLoadingSpinner() {
-            fetchBtn.disabled = false;
-            loadingDiv.style.display = 'none';
-        }
-
         function handleFetchClick() {
             const url = urlInput.value.trim();
             const mode = document.querySelector('input[name="mode"]:checked').value;
 
             if (!url) {
-                showError('請輸入網址');
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '請輸入網址';
                 return;
             }
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                showError('網址須以 http:// 或 https:// 開頭');
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '網址須以 http:// 或 https:// 開頭';
                 return;
             }
 
